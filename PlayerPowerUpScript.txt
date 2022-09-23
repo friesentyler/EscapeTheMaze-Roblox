@@ -1,0 +1,325 @@
+local CachedPlayerTableScript = require(script.Parent.CachedPlayerTableScript)
+
+local ServerStorage = game:GetService("ServerStorage")
+local GameAnalytics = require(ServerStorage.GameAnalytics)
+
+local SpeedPowerUp = require(script.Parent.SpeedPowerUp)
+local LavaImmunePowerUp = require(script.Parent.LavaImmunePowerUp)
+local HunterTrackerPowerUp = require(script.Parent.HunterTrackerPowerUp)
+local JumpPowerUp = require(script.Parent.JumpPowerUp)
+local EscpeeExitFinderPowerUp = require(script.Parent.EscapeeExitFinderPowerUp)
+local TeleportPowerUp = require(script.Parent.TeleportPowerUp)
+local WarningPowerUp = require(script.Parent.WarningPowerUp)
+local InvisibilityPowerUp = require(script.Parent.InvisibilityPowerUp)
+local RunService = game:GetService("RunService")
+
+local speedPowerUpButtonPressedEvent = game.ReplicatedStorage:WaitForChild("speedPowerUpButtonPressedEvent")
+local lavaImmunePowerUpButtonPressedEvent = game.ReplicatedStorage:WaitForChild("lavaImmunePowerUpButtonPressedEvent")
+local hunterTrackerPowerUpButtonPressedEvent = game.ReplicatedStorage:WaitForChild("hunterTrackerPowerUpButtonPressedEvent")
+local jumpPowerUpButtonPressedEvent = game.ReplicatedStorage:WaitForChild("jumpPowerUpButtonPressedEvent")
+local escapeExitFinderPowerUpButtonPressedEvent = game.ReplicatedStorage:WaitForChild("escapeeExitFinderPowerUpButtonPressedEvent")
+local teleportPowerUpButtonPressedEvent = game.ReplicatedStorage:WaitForChild("teleportPowerUpButtonPressedEvent")
+local warningPowerUpButtonPressedEvent = game.ReplicatedStorage:WaitForChild("warningPowerUpButtonPressedEvent")
+local invisibilityPowerUpButtonPressedEvent = game.ReplicatedStorage:WaitForChild("invisibilityPowerUpButtonPressed")
+
+-- POWERUP ACTIVATIONS
+local COOLDOWN = 30
+local playerDebounce = {}
+
+function greyOutPowerUps(player)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.SpeedPowerUp.TextColor3 = Color3.new(0, 0, 0)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.LavaImmunePowerUp.TextColor3 = Color3.new(0, 0, 0)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.HunterTrackerPowerUp.TextColor3 = Color3.new(0, 0, 0)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.JumpPowerUp.TextColor3 = Color3.new(0, 0, 0)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.EscapeeExitFinderPowerUp.TextColor3 = Color3.new(0, 0, 0)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.TeleportPowerUp.TextColor3 = Color3.new(0, 0, 0)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.WarningPowerUp.TextColor3 = Color3.new(0, 0, 0)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.InvisibilityPowerUp.TextColor3 = Color3.new(0, 0, 0)
+end
+
+function recolorPowerUps(player)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.SpeedPowerUp.TextColor3 = Color3.new(0, 1, 0)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.LavaImmunePowerUp.TextColor3 = Color3.new(0, 1, 0)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.HunterTrackerPowerUp.TextColor3 = Color3.new(1, 0, 0)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.JumpPowerUp.TextColor3 = Color3.new(1, 0, 0)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.EscapeeExitFinderPowerUp.TextColor3 = Color3.new(0, 1, 0)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.TeleportPowerUp.TextColor3 = Color3.new(1, 0, 0)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.WarningPowerUp.TextColor3 = Color3.new(0, 1, 0)
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.InvisibilityPowerUp.TextColor3 = Color3.new(1, 0, 0)
+end
+
+
+function activatePlayerSpeedPowerUp(player)
+	if CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Speed Power Up"] > 0 and _G.IsPlayingAsArray[player] == "Escapee" and (playerDebounce[tostring(player.UserId)] == nil or playerDebounce[tostring(player.UserId)] == false) then
+		playerDebounce[tostring(player.UserId)] = true
+		local tempspeedpowerup = SpeedPowerUp.new(player, 23, 42, CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Speed Power Up"])
+		player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.SpeedPowerUp.Text = "1: Speed Power Up: x" .. CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Speed Power Up"] - 1
+		greyOutPowerUps(player)
+		CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Speed Power Up"] = tempspeedpowerup.powerUpCount - 1
+		
+		--Analytics for Game Analytics Tracking
+		GameAnalytics:addResourceEvent(player.UserId, {
+			flowType = GameAnalytics.EGAResourceFlowType.Sink,
+			currency = "SpeedPowerUp",
+			amount = 1,
+			itemType = "PowerUps",
+			itemId = "SpeedPowerUp"
+		})
+		
+		tempspeedpowerup:activate(20)
+		wait(COOLDOWN)
+		recolorPowerUps(player)
+		playerDebounce[tostring(player.UserId)] = false
+	end
+end
+speedPowerUpButtonPressedEvent.OnServerEvent:Connect(activatePlayerSpeedPowerUp)
+
+
+function activatePlayerLavaImmunePowerUp(player)
+	if CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Lava Immunity Power Up"] > 0  and _G.IsPlayingAsArray[player] == "Escapee" and (playerDebounce[tostring(player.UserId)] == nil or playerDebounce[tostring(player.UserId)] == false) then
+		playerDebounce[tostring(player.UserId)] = true
+		local templavapowerup = LavaImmunePowerUp.new(player, CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Lava Immunity Power Up"])
+		player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.LavaImmunePowerUp.Text = "2: Lava Immune Power Up: x" .. CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Lava Immunity Power Up"] - 1
+		greyOutPowerUps(player)
+		CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Lava Immunity Power Up"] = templavapowerup.powerUpCount - 1
+		
+		--Analytics for Game Analytics Tracking
+		GameAnalytics:addResourceEvent(player.UserId, {
+			flowType = GameAnalytics.EGAResourceFlowType.Sink,
+			currency = "LavaImmunityPowerUp",
+			amount = 1,
+			itemType = "PowerUps",
+			itemId = "LavaImmunityPowerUp"
+		})
+		
+		templavapowerup:activate(20)
+		wait(COOLDOWN)
+		recolorPowerUps(player)
+		playerDebounce[tostring(player.UserId)] = false
+	end
+end
+lavaImmunePowerUpButtonPressedEvent.OnServerEvent:Connect(activatePlayerLavaImmunePowerUp)
+
+function activatePlayerHunterTrackerPowerUp(player)
+	if CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Hunter Tracker Power Up"] > 0  and _G.IsPlayingAsArray[player] == "Hunter" and (playerDebounce[tostring(player.UserId)] == nil or playerDebounce[tostring(player.UserId)] == false) then
+		local temptrackerpowerup = HunterTrackerPowerUp.new(player, CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Hunter Tracker Power Up"])
+		
+		--Analytics for Game Analytics Tracking
+		GameAnalytics:addResourceEvent(player.UserId, {
+			flowType = GameAnalytics.EGAResourceFlowType.Sink,
+			currency = "HunterTrackerPowerUp",
+			amount = 1,
+			itemType = "PowerUps",
+			itemId = "HunterTrackerPowerUp"
+		})
+		
+		local success = temptrackerpowerup:pathChecker()
+			if success ~= false then
+			playerDebounce[tostring(player.UserId)] = true
+			player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.HunterTrackerPowerUp.Text = "3: Hunter Tracker Power Up: x" .. CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Hunter Tracker Power Up"] - 1
+			greyOutPowerUps(player)
+			CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Hunter Tracker Power Up"] = temptrackerpowerup.powerUpCount - 1
+			temptrackerpowerup:activate(20)
+			wait(COOLDOWN)
+			recolorPowerUps(player)
+			playerDebounce[tostring(player.UserId)] = false
+		end
+	end
+end
+hunterTrackerPowerUpButtonPressedEvent.OnServerEvent:Connect(activatePlayerHunterTrackerPowerUp)
+
+function activatePlayerJumpPower(player)
+	if CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Jump Power Up"] > 0 and _G.IsPlayingAsArray[player] == "Hunter" and (playerDebounce[tostring(player.UserId)] == nil or playerDebounce[tostring(player.UserId)] == false) then
+		playerDebounce[tostring(player.UserId)] = true
+		local tempjumppowerup = JumpPowerUp.new(player, CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Jump Power Up"])
+		player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.JumpPowerUp.Text = "4: Jump Power Up: x" .. CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Jump Power Up"] - 1
+		greyOutPowerUps(player)
+		CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Jump Power Up"] = tempjumppowerup.powerUpCount - 1
+		
+		--Analytics for Game Analytics Tracking
+		GameAnalytics:addResourceEvent(player.UserId, {
+			flowType = GameAnalytics.EGAResourceFlowType.Sink,
+			currency = "JumpPowerUp",
+			amount = 1,
+			itemType = "PowerUps",
+			itemId = "JumpPowerUp"
+		})
+		
+		tempjumppowerup:activate(20)
+		wait(COOLDOWN)
+		recolorPowerUps(player)
+		playerDebounce[tostring(player.UserId)] = false
+	end
+end
+jumpPowerUpButtonPressedEvent.OnServerEvent:Connect(activatePlayerJumpPower)
+
+function activatePlayerEscapeeExitFinderPowerUp(player)
+	if CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Escapee Exit Finder Power Up"] > 0  and _G.IsPlayingAsArray[player] == "Escapee" and (playerDebounce[tostring(player.UserId)] == nil or playerDebounce[tostring(player.UserId)] == false) then
+		local tempexitpowerup = EscpeeExitFinderPowerUp.new(player, CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Escapee Exit Finder Power Up"])
+		
+		--Analytics for Game Analytics Tracking
+		GameAnalytics:addResourceEvent(player.UserId, {
+			flowType = GameAnalytics.EGAResourceFlowType.Sink,
+			currency = "EscapeeExitFinderPowerUp",
+			amount = 1,
+			itemType = "PowerUps",
+			itemId = "EscapeeExitFinderPowerUp"
+		})
+		
+		local success = tempexitpowerup:pathChecker()
+		if success ~= false then
+			playerDebounce[tostring(player.UserId)] = true
+			player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.EscapeeExitFinderPowerUp.Text = "5: Escapee Exit Finder Power Up: x" .. CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Escapee Exit Finder Power Up"] - 1
+			greyOutPowerUps(player)
+			CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Escapee Exit Finder Power Up"] = tempexitpowerup.powerUpCount - 1
+			tempexitpowerup:activate(20)
+			wait(COOLDOWN)
+			recolorPowerUps(player)
+			playerDebounce[tostring(player.UserId)] = false
+		end
+	end
+end
+escapeExitFinderPowerUpButtonPressedEvent.OnServerEvent:Connect(activatePlayerEscapeeExitFinderPowerUp)
+
+function activatePlayerTeleportPowerUp(player)
+	if CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Teleport Power Up"] > 0 and _G.IsPlayingAsArray[player] == "Hunter" and (playerDebounce[tostring(player.UserId)] == nil or playerDebounce[tostring(player.UserId)] == false) then
+		playerDebounce[tostring(player.UserId)] = true
+		local tempteleportpowerup = TeleportPowerUp.new(player, CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Teleport Power Up"])
+		player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.TeleportPowerUp.Text = "6: Teleport Power Up: x" .. CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Teleport Power Up"] - 1
+		greyOutPowerUps(player)
+		CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Teleport Power Up"] = tempteleportpowerup.powerUpCount - 1
+		
+		--Analytics for Game Analytics Tracking
+		GameAnalytics:addResourceEvent(player.UserId, {
+			flowType = GameAnalytics.EGAResourceFlowType.Sink,
+			currency = "TeleportPowerUp",
+			amount = 1,
+			itemType = "PowerUps",
+			itemId = "TeleportPowerUp"
+		})
+		
+		tempteleportpowerup:activate(3)
+		wait(COOLDOWN)
+		recolorPowerUps(player)
+		playerDebounce[tostring(player.UserId)] = false
+	end
+end
+teleportPowerUpButtonPressedEvent.OnServerEvent:Connect(activatePlayerTeleportPowerUp)
+
+function activatePlayerWarningPowerUp(player)
+	if CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Warning Power Up"] > 0 and _G.IsPlayingAsArray[player] == "Escapee" and (playerDebounce[tostring(player.UserId)] == nil or playerDebounce[tostring(player.UserId)] == false) then
+		playerDebounce[tostring(player.UserId)] = true
+		local tempwarningpowerup = WarningPowerUp.new(player, CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Warning Power Up"])
+		player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.WarningPowerUp.Text = "7: Warning Power Up: x" .. CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Warning Power Up"] - 1
+		greyOutPowerUps(player)
+		CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Warning Power Up"] = tempwarningpowerup.powerUpCount - 1
+		
+		--Analytics for Game Analytics Tracking
+		GameAnalytics:addResourceEvent(player.UserId, {
+			flowType = GameAnalytics.EGAResourceFlowType.Sink,
+			currency = "WarningPowerUp",
+			amount = 1,
+			itemType = "PowerUps",
+			itemId = "WarningPowerUp"
+		})
+		
+		tempwarningpowerup:activate(25)
+		wait(COOLDOWN)
+		recolorPowerUps(player)
+		playerDebounce[tostring(player.UserId)] = false
+	end
+end
+warningPowerUpButtonPressedEvent.OnServerEvent:Connect(activatePlayerWarningPowerUp)
+
+function activatePlayerInvisibilityPowerUp(player)
+	if CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Invisibility Power Up"] > 0 and _G.IsPlayingAsArray[player] == "Hunter" and (playerDebounce[tostring(player.UserId)] == nil or playerDebounce[tostring(player.UserId)] == false) then
+		playerDebounce[tostring(player.UserId)] = true
+		local tempinvisibilitypowerup = InvisibilityPowerUp.new(player, CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Invisibility Power Up"])
+		player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps.InvisibilityPowerUp.Text = "8: Invisibility Power Up: x" .. CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Invisibility Power Up"] - 1
+		greyOutPowerUps(player)
+		CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Invisibility Power Up"] = tempinvisibilitypowerup.powerUpCount - 1
+		
+		--Analytics for Game Analytics Tracking
+		GameAnalytics:addResourceEvent(player.UserId, {
+			flowType = GameAnalytics.EGAResourceFlowType.Sink,
+			currency = "InvisibilityPowerUp",
+			amount = 1,
+			itemType = "PowerUps",
+			itemId = "InvisibilityPowerUp"
+		})
+		
+		tempinvisibilitypowerup:activate(25)
+		wait(COOLDOWN)
+		recolorPowerUps(player)
+		playerDebounce[tostring(player.UserId)] = false
+	end
+end
+invisibilityPowerUpButtonPressedEvent.OnServerEvent:Connect(activatePlayerInvisibilityPowerUp)
+
+-- PLAYER BUYING POWERUPS
+local CurrencyScript = require(script.Parent.CurrencyScript)
+local shopBuyEvent = game.ReplicatedStorage:WaitForChild("shopBuyEvent")
+local SPEED_POWER_UP_COST = 1
+local LAVA_IMMUNE_POWER_UP_COST = 2
+local HUNTER_TRACKER_POWER_UP_COST = 3
+local JUMP_POWER_UP_COST = 4
+local ESCAPEE_EXIT_FINDER_POWER_UP_COST = 5
+local TELEPORT_POWER_UP_COST = 6
+local WARNING_POWER_UP_COST = 7
+local INVISIBILITY_POWER_UP_COST = 8
+
+function playerBuying(player, numberOfPowerUps, typeOfPowerUp)
+	local Costs = Cost(player)
+	if CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Maze Coins"] >= (Costs[typeOfPowerUp]*numberOfPowerUps) and numberOfPowerUps ~= 0 then
+		CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Maze Coins"] = CachedPlayerTableScript.CachedTable[tostring(player.UserId)]["Maze Coins"] - Costs[typeOfPowerUp]*numberOfPowerUps
+		CachedPlayerTableScript.CachedTable[tostring(player.UserId)][typeOfPowerUp] = CachedPlayerTableScript.CachedTable[tostring(player.UserId)][typeOfPowerUp] + numberOfPowerUps
+		local powerups = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").PowerUps:GetChildren()
+		for i,v in pairs(powerups) do
+			if v:GetAttribute("TypeOfPower") == typeOfPowerUp then
+				local newText = string.split(v.Text, ": x")
+				v.Text = newText[1] .. ": x" .. CachedPlayerTableScript.CachedTable[tostring(player.UserId)][typeOfPowerUp]
+			end
+		end
+		CurrencyScript.subtractCoins(player, Costs[typeOfPowerUp]*numberOfPowerUps)
+		
+		--Analytics for Game Analytics tracking
+		GameAnalytics:addResourceEvent(player.UserId, {
+			flowType = GameAnalytics.EGAResourceFlowType.Sink,
+			currency = "Coins",
+			amount = Costs[typeOfPowerUp]*numberOfPowerUps,
+			itemType = "PowerUps",
+			itemId = typeOfPowerUp
+		})
+		
+		GameAnalytics:addResourceEvent(player.UserId, {
+			flowType = GameAnalytics.EGAResourceFlowType.Source,
+			currency = typeOfPowerUp:gsub('%s+', ''),
+			amount = numberOfPowerUps,
+			itemType = "PowerUps",
+			itemId = typeOfPowerUp
+		})
+		
+	end
+end
+shopBuyEvent.OnServerEvent:Connect(playerBuying)
+
+function Cost(player)
+	local costarray = {}
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.SpeedPowerUpFrame:SetAttribute("Cost", SPEED_POWER_UP_COST)
+	costarray["Speed Power Up"] = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.SpeedPowerUpFrame:GetAttribute("Cost")
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.LavaImmunePowerUpFrame:SetAttribute("Cost", LAVA_IMMUNE_POWER_UP_COST)
+	costarray["Lava Immunity Power Up"] = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.LavaImmunePowerUpFrame:GetAttribute("Cost")
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.HunterTrackerPowerUpFrame:SetAttribute("Cost", HUNTER_TRACKER_POWER_UP_COST)
+	costarray["Hunter Tracker Power Up"] = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.HunterTrackerPowerUpFrame:GetAttribute("Cost")
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.JumpPowerUpFrame:SetAttribute("Cost", JUMP_POWER_UP_COST)
+	costarray["Jump Power Up"] = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.JumpPowerUpFrame:GetAttribute("Cost")
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.EscapeeExitFinderPowerUpFrame:SetAttribute("Cost", ESCAPEE_EXIT_FINDER_POWER_UP_COST)
+	costarray["Escapee Exit Finder Power Up"] = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.EscapeeExitFinderPowerUpFrame:GetAttribute("Cost")
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.TeleportPowerUpFrame:SetAttribute("Cost", TELEPORT_POWER_UP_COST)
+	costarray["Teleport Power Up"] = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.TeleportPowerUpFrame:GetAttribute("Cost")
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.WarningPowerUpFrame:SetAttribute("Cost", WARNING_POWER_UP_COST)
+	costarray["Warning Power Up"] = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.WarningPowerUpFrame:GetAttribute("Cost")
+	player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.InvisibilityPowerUpFrame:SetAttribute("Cost", INVISIBILITY_POWER_UP_COST)
+	costarray["Invisibility Power Up"] = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").Shop.InvisibilityPowerUpFrame:GetAttribute("Cost")
+	return costarray
+end
