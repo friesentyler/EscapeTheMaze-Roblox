@@ -8,3 +8,7 @@ I've included videos and gifs of some of the more interesting parts of the proje
 # Maze generation
 Uses recursive backtracking to generate the maze.
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/114262230/211856357-f77d0f17-b317-4e53-b781-9357035d057d.gif)
+
+
+# Pathfinding implemented as player tracking powerup
+![ezgif com-gif-maker-2](https://user-images.githubusercontent.com/114262230/211858739-f711a93b-8a51-4cf3-acea-2fb303436846.gif)
